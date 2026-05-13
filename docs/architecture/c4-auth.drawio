@@ -1,0 +1,140 @@
+<mxfile host="app.diagrams.net" agent="claude-code" version="24.0.0">
+  <diagram id="c4-auth-bionicpro" name="C4 - Auth (BionicPRO)">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="C4 Container — Управление учётными данными BionicPRO (мультистрановой IdP + BFF + PKCE)" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1520" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="user" value="&lt;b&gt;Пользователь BionicPRO&lt;/b&gt;&lt;br/&gt;[Person]&lt;br/&gt;Носитель протеза" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427B;strokeColor=#073B6F;fontColor=#FFFFFF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="200" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="browser" value="&lt;b&gt;Browser SPA (React + TS)&lt;/b&gt;&lt;br/&gt;[Container: SPA]&lt;br/&gt;UI отчётов. Хранит только HttpOnly session cookie. НЕ получает access/refresh токены." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="340" y="80" width="240" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="bff" value="&lt;b&gt;Auth BFF&lt;/b&gt;&lt;br/&gt;[Container: Node.js / Java]&lt;br/&gt;Backend-for-Frontend. Выполняет Auth Code + PKCE с Keycloak. Хранит access/refresh токены в Redis. Выпускает HttpOnly cookie. Проксирует запросы к API." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="640" y="80" width="260" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="redis" value="&lt;b&gt;Token Store&lt;/b&gt;&lt;br/&gt;[Container: Redis]&lt;br/&gt;Хранение access/refresh токенов и session→user mapping. TTL = срок жизни refresh." style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="80" width="180" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="kc" value="&lt;b&gt;Keycloak (Identity Broker)&lt;/b&gt;&lt;br/&gt;[Container: Keycloak]&lt;br/&gt;Брокер OIDC. По стране пользователя направляет на внешний IdP (Identity Brokering). Выпускает локальные access/refresh JWT для BionicPRO. PKCE S256 обязателен для публичных клиентов." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="640" y="320" width="260" height="170" as="geometry" />
+        </mxCell>
+
+        <mxCell id="kcdb" value="&lt;b&gt;Keycloak DB&lt;/b&gt;&lt;br/&gt;[Container: PostgreSQL]&lt;br/&gt;Federated identities (sub, country, roles). Без медданных и без избыточных PII." style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="320" width="180" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="idp_ru" value="&lt;b&gt;External IdP — RU&lt;/b&gt;&lt;br/&gt;[External System: OIDC/SAML]&lt;br/&gt;Корпоративный IdP представительства РФ. Источник учётных записей." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6c6c6c;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="80" width="240" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="idp_de" value="&lt;b&gt;External IdP — DE&lt;/b&gt;&lt;br/&gt;[External System: OIDC/SAML]&lt;br/&gt;IdP представительства Германии." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6c6c6c;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="210" width="240" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="idp_n" value="&lt;b&gt;External IdP — …&lt;/b&gt;&lt;br/&gt;[External System: OIDC/SAML]&lt;br/&gt;IdP остальных стран (расширяется без изменений приложения)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6c6c6c;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="330" width="240" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="api" value="&lt;b&gt;Reports API&lt;/b&gt;&lt;br/&gt;[Container: Backend]&lt;br/&gt;Resource Server. Валидирует JWT Keycloak, проверяет owner=sub." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="640" y="560" width="260" height="110" as="geometry" />
+        </mxCell>
+
+        <mxCell id="localdb" value="&lt;b&gt;Локальная БД страны&lt;/b&gt;&lt;br/&gt;[Container: PostgreSQL + OLAP]&lt;br/&gt;PII профиля и медицинские данные. Хранение в юрисдикции страны представительства (data residency)." style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="960" y="560" width="180" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="endArrow=open;html=1;endSize=8;startSize=8;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="user" target="browser">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e1l" value="Использует [HTTPS]" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e1">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e2" style="endArrow=open;html=1;" edge="1" parent="1" source="browser" target="bff">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e2l" value="1. /login (HttpOnly cookie, без токенов в JS)" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e2">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e3" style="endArrow=open;html=1;" edge="1" parent="1" source="bff" target="kc">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e3l" value="2. Authorization Code + PKCE (S256)&#xa;client_secret хранится в BFF" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e3">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e4" style="endArrow=open;html=1;" edge="1" parent="1" source="kc" target="idp_ru">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e4l" value="3a. Identity Brokering OIDC&#xa;(kc_idp_hint=ru)" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e4">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e5" style="endArrow=open;html=1;" edge="1" parent="1" source="kc" target="idp_de">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e5l" value="3b. Identity Brokering" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e5">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e6" style="endArrow=open;html=1;" edge="1" parent="1" source="kc" target="idp_n">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e6l" value="3c. Identity Brokering" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e6">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e7" style="endArrow=open;html=1;" edge="1" parent="1" source="kc" target="kcdb">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e7l" value="federated identity (sub, country) — без медданных" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e7">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e8" style="endArrow=open;html=1;" edge="1" parent="1" source="bff" target="redis">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e8l" value="4. session_id → {access, refresh}" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e8">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e9" style="endArrow=open;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.25;" edge="1" parent="1" source="bff" target="api">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e9l" value="5. Bearer access_token (server-to-server)" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e9">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e10" style="endArrow=open;html=1;dashed=1;" edge="1" parent="1" source="api" target="kc">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e10l" value="JWKS / introspection" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e10">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="e11" style="endArrow=open;html=1;" edge="1" parent="1" source="api" target="localdb">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e11l" value="PII + медданные в стране пользователя" style="edgeLabel;html=1;align=center;fontSize=10;" vertex="1" connectable="0" parent="e11">
+            <mxGeometry x="-0.1" relative="1" as="geometry" />
+          </mxCell>
+        </mxCell>
+
+        <mxCell id="legend" value="&lt;b&gt;Ключевые свойства решения&lt;/b&gt;&lt;br/&gt;&#x2022; Унификация: один Keycloak-брокер, N внешних IdP по странам (Identity Brokering, kc_idp_hint / домен).&lt;br/&gt;&#x2022; Локальность данных: PII и медданные — только в локальной БД страны. В Keycloak — только sub/country/roles.&lt;br/&gt;&#x2022; Токены IdP/Keycloak не покидают backend: BFF хранит их в Redis, во фронт — только HttpOnly+Secure+SameSite cookie.&lt;br/&gt;&#x2022; PKCE S256 обязателен; refresh-token rotation; короткий TTL access; ротация cookie session.&lt;br/&gt;&#x2022; Расширение на новую страну = добавление Identity Provider в Keycloak, без изменений во фронте/BFF/API." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=11;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="560" width="520" height="180" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
