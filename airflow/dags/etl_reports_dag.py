@@ -32,12 +32,16 @@ from clickhouse_driver import Client as ClickHouseClient
 
 log = logging.getLogger(__name__)
 
+import os as _os
+
 CRM_CONN_ID = "crm_postgres"
 TELEMETRY_CONN_ID = "telemetry_postgres"
 
 CLICKHOUSE_HOST = "clickhouse"
 CLICKHOUSE_PORT = 9000
 CLICKHOUSE_DB = "reports"
+CLICKHOUSE_USER = _os.getenv("CLICKHOUSE_USER", "default")
+CLICKHOUSE_PASSWORD = _os.getenv("CLICKHOUSE_PASSWORD", "")
 
 PIPELINE_NAME = "user_daily_mart"
 
@@ -47,6 +51,8 @@ def _ch_client() -> ClickHouseClient:
         host=CLICKHOUSE_HOST,
         port=CLICKHOUSE_PORT,
         database=CLICKHOUSE_DB,
+        user=CLICKHOUSE_USER,
+        password=CLICKHOUSE_PASSWORD,
     )
 
 

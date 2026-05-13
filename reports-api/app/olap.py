@@ -8,13 +8,21 @@ from clickhouse_driver import Client
 
 
 class OlapRepository:
-    def __init__(self, host: str, port: int, database: str) -> None:
+    def __init__(self, host: str, port: int, database: str, user: str = "default", password: str = "") -> None:
         self._host = host
         self._port = port
         self._database = database
+        self._user = user
+        self._password = password
 
     def _client(self) -> Client:
-        return Client(host=self._host, port=self._port, database=self._database)
+        return Client(
+            host=self._host,
+            port=self._port,
+            database=self._database,
+            user=self._user,
+            password=self._password,
+        )
 
     def get_watermark(self) -> Optional[date]:
         rows = self._client().execute(

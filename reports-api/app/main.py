@@ -45,6 +45,8 @@ olap = OlapRepository(
     host=os.getenv("CLICKHOUSE_HOST", "clickhouse"),
     port=int(os.getenv("CLICKHOUSE_PORT", "9000")),
     database=os.getenv("CLICKHOUSE_DB", "reports"),
+    user=os.getenv("CLICKHOUSE_USER", "default"),
+    password=os.getenv("CLICKHOUSE_PASSWORD", ""),
 )
 
 
