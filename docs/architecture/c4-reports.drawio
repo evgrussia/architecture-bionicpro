@@ -1,0 +1,100 @@
+<mxfile host="app.diagrams.net" agent="claude-code" version="24.0.0">
+  <diagram id="c4-reports-bionicpro" name="C4 - Reports (BionicPRO)">
+    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="title" value="C4 Container — Сервис отчётов BionicPRO (ETL Airflow → ClickHouse → Reports API)" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="1620" height="30" as="geometry" />
+        </mxCell>
+
+        <mxCell id="user" value="&lt;b&gt;Пользователь&lt;/b&gt;&lt;br/&gt;[Person]&lt;br/&gt;Носитель протеза" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427B;strokeColor=#073B6F;fontColor=#FFFFFF;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="60" y="100" width="180" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="spa" value="&lt;b&gt;Browser SPA&lt;/b&gt;&lt;br/&gt;[Container: React + TS]&lt;br/&gt;Кнопка &quot;Получить отчёт&quot; → GET /reports" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="290" y="90" width="220" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="kc" value="&lt;b&gt;Keycloak&lt;/b&gt;&lt;br/&gt;[Container]&lt;br/&gt;OIDC + PKCE. Выпускает JWT (sub = userId)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="290" y="240" width="220" height="100" as="geometry" />
+        </mxCell>
+
+        <mxCell id="api" value="&lt;b&gt;Reports API&lt;/b&gt;&lt;br/&gt;[Container: FastAPI / Python]&lt;br/&gt;GET /reports?from&amp;to&#xa;• валидирует JWT по JWKS&#xa;• ограничивает period &lt;= last_etl_watermark&#xa;• читает только sub == owner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="580" y="90" width="260" height="150" as="geometry" />
+        </mxCell>
+
+        <mxCell id="olap" value="&lt;b&gt;OLAP — ClickHouse&lt;/b&gt;&lt;br/&gt;[Container]&lt;br/&gt;• reports.user_daily_mart (витрина по user_id, day)&#xa;• reports.etl_watermark&#xa;Готовый отчёт без тяжёлых вычислений в рантайме." style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="900" y="90" width="240" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="airflow" value="&lt;b&gt;Apache Airflow&lt;/b&gt;&lt;br/&gt;[Container: scheduler + worker]&lt;br/&gt;DAG etl_reports_dag (hourly)&#xa;Extract: CRM, telemetry&#xa;Transform: агрегация по user/day&#xa;Load: user_daily_mart + watermark" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="900" y="320" width="260" height="160" as="geometry" />
+        </mxCell>
+
+        <mxCell id="crm" value="&lt;b&gt;CRM DB&lt;/b&gt;&lt;br/&gt;[Container: PostgreSQL]&lt;br/&gt;Профили клиентов, контракты, страна, модель протеза." style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="320" width="200" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tel" value="&lt;b&gt;Telemetry DB&lt;/b&gt;&lt;br/&gt;[Container: PostgreSQL]&lt;br/&gt;Сырые данные с датчиков протезов (steps, battery, motor_load, errors)." style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#1168BD;strokeColor=#0D5AA7;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="500" width="200" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="device" value="&lt;b&gt;Протез (IoT)&lt;/b&gt;&lt;br/&gt;[External]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#6c6c6c;fontColor=#FFFFFF;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="540" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="endArrow=open;html=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="user" target="spa">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e1l" value="HTTPS" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        </mxCell>
+
+        <mxCell id="e2" style="endArrow=open;html=1;" edge="1" parent="1" source="spa" target="kc">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e2l" value="OIDC + PKCE" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        </mxCell>
+
+        <mxCell id="e3" style="endArrow=open;html=1;" edge="1" parent="1" source="spa" target="api">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e3l" value="GET /reports&#xa;Bearer JWT" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        </mxCell>
+
+        <mxCell id="e4" style="endArrow=open;html=1;dashed=1;" edge="1" parent="1" source="api" target="kc">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e4l" value="JWKS / verify" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        </mxCell>
+
+        <mxCell id="e5" style="endArrow=open;html=1;" edge="1" parent="1" source="api" target="olap">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e5l" value="SELECT FROM user_daily_mart&#xa;WHERE user_id = sub AND day &lt;= watermark" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        </mxCell>
+
+        <mxCell id="e6" style="endArrow=open;html=1;" edge="1" parent="1" source="airflow" target="crm">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e6l" value="Extract" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        </mxCell>
+
+        <mxCell id="e7" style="endArrow=open;html=1;" edge="1" parent="1" source="airflow" target="tel">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e7l" value="Extract incremental&#xa;(by created_at)" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        </mxCell>
+
+        <mxCell id="e8" style="endArrow=open;html=1;" edge="1" parent="1" source="airflow" target="olap">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e8l" value="Load + Transform&#xa;(витрина user_daily_mart)" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e8"><mxGeometry relative="1" as="geometry"/></mxCell>
+        </mxCell>
+
+        <mxCell id="e9" style="endArrow=open;html=1;" edge="1" parent="1" source="device" target="tel">
+          <mxGeometry relative="1" as="geometry" />
+          <mxCell id="e9l" value="ingest" style="edgeLabel;html=1;fontSize=10;" vertex="1" connectable="0" parent="e9"><mxGeometry relative="1" as="geometry"/></mxCell>
+        </mxCell>
+
+        <mxCell id="legend" value="&lt;b&gt;Принципы&lt;/b&gt;&lt;br/&gt;&#x2022; ETL (Airflow, hourly): извлекает CRM + telemetry, агрегирует в reports.user_daily_mart с PK (user_id, day).&lt;br/&gt;&#x2022; Витрина денормализована: один SELECT по (user_id, period) — без join'ов в рантайме.&lt;br/&gt;&#x2022; ClickHouse — MergeTree с ORDER BY (user_id, day) — быстрая фильтрация по пользователю.&lt;br/&gt;&#x2022; Watermark: API не отдаёт period, выходящий за границу обработанных Airflow дней.&lt;br/&gt;&#x2022; Авторизация: JWT обязателен, owner = sub из токена; запрос чужих данных → 403.&lt;br/&gt;&#x2022; Frontend читает /reports через API; неаутентифицированный пользователь не получает доступа." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=11;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+          <mxGeometry x="60" y="500" width="780" height="180" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

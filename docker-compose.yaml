@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # --- Keycloak (Задание 1) --------------------------------------------------
   keycloak_db:
     image: postgres:14
     environment:
@@ -11,6 +12,7 @@ services:
       - ./postgres-keycloak-data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+
   keycloak:
     image: quay.io/keycloak/keycloak:21.1
     environment:
@@ -20,7 +22,7 @@ services:
       KC_DB_URL: jdbc:postgresql://keycloak_db:5432/keycloak_db
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: keycloak_password
-    command: 
+    command:
       - start-dev
       - --import-realm
     volumes:
@@ -29,6 +31,99 @@ services:
       - "8080:8080"
     depends_on:
       - keycloak_db
+
+  # --- Источники данных (Задание 2) -----------------------------------------
+  crm_db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: crm
+      POSTGRES_USER: crm
+      POSTGRES_PASSWORD: crm
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./airflow/sql/init_sources.sql:/docker-entrypoint-initdb.d/init.sql
+
+  telemetry_db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: telemetry
+      POSTGRES_USER: telemetry
+      POSTGRES_PASSWORD: telemetry
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./airflow/sql/init_sources.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # --- OLAP -----------------------------------------------------------------
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - ./airflow/sql/init_clickhouse.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # --- Airflow --------------------------------------------------------------
+  airflow_db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    ports:
+      - "5436:5432"
+
+  airflow:
+    build:
+      context: ./airflow
+      dockerfile: Dockerfile
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
+      AIRFLOW__WEBSERVER__SECRET_KEY: bionicpro-secret
+      AIRFLOW_CONN_CRM_POSTGRES: postgres://crm:crm@crm_db:5432/crm
+      AIRFLOW_CONN_TELEMETRY_POSTGRES: postgres://telemetry:telemetry@telemetry_db:5432/telemetry
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    command: standalone
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+    ports:
+      - "8081:8080"
+    depends_on:
+      - airflow_db
+      - crm_db
+      - telemetry_db
+      - clickhouse
+
+  # --- Reports API ----------------------------------------------------------
+  reports_api:
+    build:
+      context: ./reports-api
+      dockerfile: Dockerfile
+    environment:
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/reports-realm
+      KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/reports-realm/protocol/openid-connect/certs
+      KEYCLOAK_AUDIENCE: reports-api
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 9000
+      CLICKHOUSE_DB: reports
+      CORS_ALLOW_ORIGINS: http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - clickhouse
+      - keycloak
+
+  # --- Frontend -------------------------------------------------------------
   frontend:
     build:
       context: ./frontend
