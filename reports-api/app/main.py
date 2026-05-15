@@ -5,7 +5,8 @@
 
 Гарантии:
   • без валидного JWT — 401;
-  • пользователь видит только собственный отчёт (owner = sub из токена);
+  • пользователь видит только собственный отчёт (owner = preferred_username из токена,
+    fallback на sub);
   • запрашиваемый период обрезается по ETL watermark, т.е. API не отдаёт
     дни, которые ещё не обработаны Airflow;
   • тяжёлых вычислений в рантайме нет — это SELECT по витрине.
@@ -79,15 +80,18 @@ def get_report(
     user: dict = Depends(current_user),
     user_id: Optional[str] = Query(
         None,
-        description="ID пользователя. Игнорируется, если не совпадает с sub из токена.",
+        description="ID пользователя. Игнорируется, если не совпадает с владельцем токена.",
     ),
     date_from: Optional[date] = Query(None, alias="from"),
     date_to: Optional[date] = Query(None, alias="to"),
 ) -> dict:
-    sub: str = user["sub"]
+    # Идентификатор владельца отчёта — это username из Keycloak.
+    # Под этим же ключом данные лежат в CRM и в витрине ClickHouse.
+    # На случай токенов без preferred_username — откатываемся на sub.
+    owner: str = user.get("preferred_username") or user["sub"]
 
     # Жёстко режем доступ: пользователь может смотреть только свой отчёт.
-    if user_id is not None and user_id != sub:
+    if user_id is not None and user_id != owner:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only access your own report",
@@ -105,7 +109,7 @@ def get_report(
     watermark = olap.get_watermark()
     if watermark is None:
         return {
-            "user_id": sub,
+            "user_id": owner,
             "period": {"from": str(date_from), "to": str(date_to)},
             "watermark": None,
             "items": [],
@@ -117,7 +121,7 @@ def get_report(
     effective_to = min(date_to, watermark)
     if effective_to < date_from:
         return {
-            "user_id": sub,
+            "user_id": owner,
             "period": {"from": str(date_from), "to": str(date_to)},
             "watermark": str(watermark),
             "items": [],
@@ -127,7 +131,7 @@ def get_report(
             ),
         }
 
-    rows = olap.fetch_user_report(sub, date_from, effective_to)
+    rows = olap.fetch_user_report(owner, date_from, effective_to)
 
     summary = {
         "days": len(rows),
@@ -136,7 +140,7 @@ def get_report(
     }
 
     return {
-        "user_id": sub,
+        "user_id": owner,
         "period": {"from": str(date_from), "to": str(effective_to)},
         "requested_to": str(date_to),
         "watermark": str(watermark),
